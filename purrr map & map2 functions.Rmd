@@ -1,0 +1,130 @@
+---
+title: "purrr map & map2 functions"
+author: "FRK"
+date: "7/29/2021"
+output: 
+  html_document:
+    highligh: tango
+    theme: united
+    toc: TRUE
+    toc_float:
+      collapsed: TRUE
+      smooth_scroll: TRUE
+    number_sections: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+# Data
+
+```{r}
+require(tidyverse)
+
+d <- tibble(group = c("HRT", "Placebo"),
+            MeanHDL  = c(8.1, 2.4),
+            sdHDL = c(10.5, 4.3))
+d
+
+```
+
+# **map** function, 5 ways
+
+## With Just function name
+
+```{r}
+d %>%
+  mutate(logldl = map(MeanHDL, log)) %>% 
+  unnest() %>% 
+  group_by(group) %>% 
+  summarise(mean(logldl))
+```
+
+## With mentioning additional parameters
+
+```{r}
+d %>%
+  mutate(logldl = map(MeanHDL, log, base = 2)) %>% 
+  unnest() %>% 
+  group_by(group) %>% 
+  summarise(mean(logldl))
+```
+
+
+## With a ~ sign, bracket and .x
+
+```{r}
+d %>%
+  mutate(logldl = map(MeanHDL, ~log(.x))) %>% 
+  unnest() %>% 
+  group_by(group) %>% 
+  summarise(mean(logldl))
+```
+
+## With ~, bracket and addictional parameter
+
+```{r}
+d %>%
+  mutate(logldl = map(MeanHDL, ~log(.x, base = 2))) %>% 
+  unnest() %>% 
+  group_by(group) %>% 
+  summarise(mean(logldl))
+```
+
+## With **..1** to mention the first variable as first argument
+
+```{r}
+
+d %>%
+  mutate(logldl = map(MeanHDL, ~log(..1))) %>% 
+  unnest() %>% 
+  group_by(group) %>% 
+  summarise(mean(logldl))
+```
+
+# **map2** function, 4 ways
+
+
+## With Just function name
+
+```{r}
+d %>%
+  mutate(simldl = map2(MeanHDL, sdHDL, rnorm, n = 1000)) %>% 
+  unnest() %>% 
+  group_by(group) %>% 
+  summarise(mean(simldl))
+```
+
+## With a ~ sign, bracket and .x , .y
+
+```{r}
+
+d %>%
+  mutate(simldl = map2(MeanHDL, sdHDL, ~rnorm(1000, .x, .y))) %>% 
+  unnest() %>% 
+  group_by(group) %>% 
+  summarise(mean(simldl))
+```
+
+## With **..1** to mention the first variable as first argument, and second variable as second argument
+
+```{r}
+d %>%
+  mutate(simldl = map2(MeanHDL, sdHDL, ~rnorm(1000, ..1, ..2))) %>% 
+  unnest() %>% 
+  group_by(group) %>% 
+  summarise(mean(simldl))
+```
+
+## Rotating the arguments list will result in different result
+
+```{r}
+d %>%
+  mutate(simldl = map2(MeanHDL, sdHDL, ~rnorm(1000, ..2, ..1))) %>% 
+  unnest() %>% 
+  group_by(group) %>% 
+  summarise(mean(simldl))
+
+```
+
